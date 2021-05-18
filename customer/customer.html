@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>customer registration</title>
+    <link rel="stylesheet" href="customer.css">
+
+  </head>
+  <body>
+    <div class="header" >
+      <div class="heading" id="heading">
+        Customer Login
+      </div>
+      <div class="login">
+        <form class="loginForm" action="clog1.php" id="loginForm" method="post">
+                User Name:
+                <input type="text" name="userName" required><br>
+                Password:
+                <input type="password" name="password" class="passwordBox" required><br>
+                <input type="submit" name="login" value="login" class="loginButton"><br>
+        </form>
+      </div>
+    </div>
+    <div class="signUp">
+      <p class="noAccount" id="noAccount">
+        Don't Have an Account?
+        <button onclick="displaySignUpForm()">click here</button>
+      </p>
+      <div id="signUpForm" class="signUpForm">
+        <form action="customer.php" method="POST" enctype="multipart/form-data">
+          <table class="nameTable">
+            <tr>
+              <th>
+                First Name
+              </th>
+              <th>
+                Last Name
+              </th>
+            </tr>
+            <tr>
+              <td>
+                <input type="text" name="firstName" required>
+              </td>
+              <td>
+                <input type="text" name="lastName" required>
+              </td>
+            </tr>
+            </table>
+            Phone No. <br>
+            <input type="text" name="phNo" required><br>
+            Email ID: <br>
+            <input type="email" name="mailId" required><br>
+          
+            <br>
+            Adhaar Card: <br>
+            <input type="file" name="adhar" required>
+            <!--<input type="button" name="upload" value="upload">-->
+            <br>
+            User Name: <br>
+            <input type="text" name="userName" required><br>
+            Password: <br>
+            <input type="password" name="password" required><br>
+            Re-enter password: <br>
+            <input type="password" name="rpassword" required><br>
+            <input type="submit" value="Sign UP">
+        </form>
+      </div>
+    </div>
+    <script type="text/javascript" src="customer.js">
+
+    </script>
+  </body>
+</html>

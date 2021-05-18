@@ -1,0 +1,15 @@
+<html>
+<head>
+<title>UPDATE TRANSACTION</title>
+</head>
+<body>
+<p>UPDATE CONFIRMATION</p>
+<?php
+session_start();
+$_SESSION["uname"]=$_POST['uname'];
+?>
+<form action="aut.php" method="post">
+<input type="submit" value="CONFIRM">
+</form>
+</body>
+</html>

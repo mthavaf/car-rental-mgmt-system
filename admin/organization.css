@@ -1,0 +1,45 @@
+.heading{
+  margin-left: 20px;
+  text-align: left;
+  font-size: 60px;
+  color: #330033;
+  //float: left;
+}
+.login{
+  //float: right;
+}
+.signUpForm{
+  clear: left;
+  //margin-left: 30%;
+  margin-top: 5%;
+  display: none;
+  text-align: center;
+}
+.signUp{
+  clear: left;
+}
+body{
+  background-image: url("organizationBackground.jpg");
+  background-repeat: no-repeat;
+  background-size: 100%;
+}
+.loginForm{
+  margin-left: 30%;
+  margin-top: 10%;
+}
+.noAccount{
+  margin-left: 30%;
+}
+.loginButton{
+  margin-left: 20%;
+}
+
+input{
+  margin: 10px;
+}
+.passwordBox{
+  margin-left: 2.4%;
+}
+.nameTable{
+  margin-left: 30%;
+}
