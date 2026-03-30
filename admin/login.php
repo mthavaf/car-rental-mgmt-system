@@ -1,24 +1,32 @@
 <?php
-$servername = "localhost";
-$user = "root";
-$passwd = "mysql123";
-$db = "car";
-$conn = mysqli_connect($servername, $user, $passwd, $db) or die(mysqli_connect_error());
+include '../config.php';
+$conn = getDBConnection();
 session_start();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-	$uname = $_POST['userName'];
-	$_SESSION["uname"] = $uname;
-	$pas = $_POST['password'];
-	$query = mysqli_query($conn, "SELECT * FROM admin WHERE uname='$uname' and password='$pas' ");
-	$query = mysqli_num_rows($query);
+    $uname = $_POST['userName'];
+    $pas = $_POST['password'];
 
-	if ($query != 1) {
-		echo "USERNAME OR PASSWORD IS INVALID. PRESS BACK TO LOGIN AGAIN";
-		exit(0);
-	}
+    $stmt = $conn->prepare("SELECT password FROM admin WHERE uname = ?");
+    $stmt->bind_param("s", $uname);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows == 1) {
+        $row = $result->fetch_assoc();
+        // For admin, check if password is hashed or plain
+        if (password_verify($pas, $row['password']) || $pas === $row['password']) {
+            $_SESSION["uname"] = $uname;
+        } else {
+            echo "<div style='color: red; font-size: 18px; text-align: center; margin: 20px;'>USERNAME OR PASSWORD IS INVALID. <a href='admin.html'>PRESS BACK TO LOGIN AGAIN</a></div>";
+            exit(0);
+        }
+    } else {
+        echo "<div style='color: red; font-size: 18px; text-align: center; margin: 20px;'>USERNAME OR PASSWORD IS INVALID. <a href='admin.html'>PRESS BACK TO LOGIN AGAIN</a></div>";
+        exit(0);
+    }
+    $stmt->close();
 }
-mysqli_close($conn);
+$conn->close();
 ?>
 
 <!DOCTYPE html>

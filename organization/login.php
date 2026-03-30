@@ -1,34 +1,39 @@
 <?php
-$servername="localhost";
-$user="root";
-$passwd="";
-$db="car";
-$conn=mysqli_connect($servername,$user,$passwd,$db) or die(mysqli_connect_error());
+include '../config.php';
+$conn = getDBConnection();
 session_start();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-$uname=$_POST['userName'];
-$_SESSION["uname"]=$uname;
-$pas=$_POST['password'];
-$query=mysqli_query($conn,"SELECT * FROM supplier WHERE uname='$uname' and password='$pas' ");
-$query=mysqli_num_rows($query);
+    $uname = $_POST['userName'];
+    $pas = $_POST['password'];
 
-if($query!=1)
-{
-	echo "USERNAME OR PASSWORD IS INVALID. PRESS BACK TO LOGIN AGAIN";
-exit (0);
+    $stmt = $conn->prepare("SELECT password FROM organization WHERE uname = ?");
+    $stmt->bind_param("s", $uname);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows == 1) {
+        $row = $result->fetch_assoc();
+        if (password_verify($pas, $row['password'])) {
+            $_SESSION["uname"] = $uname;
+        } else {
+            echo "<div style='color: red; font-size: 18px; text-align: center; margin: 20px;'>USERNAME OR PASSWORD IS INVALID. <a href='organization.html'>PRESS BACK TO LOGIN AGAIN</a></div>";
+            exit(0);
+        }
+    } else {
+        echo "<div style='color: red; font-size: 18px; text-align: center; margin: 20px;'>USERNAME OR PASSWORD IS INVALID. <a href='organization.html'>PRESS BACK TO LOGIN AGAIN</a></div>";
+        exit(0);
+    }
+    $stmt->close();
 }
-
-}
-mysqli_close($conn);
+$conn->close();
 ?>
 
 <!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Supplier LOGGED IN</title>
-    <link rel="stylesheet" href="supplier.css">
+    <title>Organization LOGGED IN</title>
+    <link rel="stylesheet" href="organization.css">
 	<style>
 	ul {
     list-style-type: none;
@@ -59,10 +64,9 @@ li a:hover {
   <body>
 <ul>
   <li><a  href="/dbPro/home.html">Home</a></li>
-  <li><a href="supplier.html">Logout</a></li>
-  <li><a href="scp.html">ChangePassword</a></li>
-   <li><a href="srac.html">RemoveAccount</a></li>
- 
+  <li><a href="organization.html">Logout</a></li>
+  <li><a href="ocp.html">ChangePassword</a></li>
+  <li><a href="orac.html">RemoveAccount</a></li>
 </ul>
       <div class="heading" id="heading">
 	  <?php
@@ -96,11 +100,12 @@ $("#clk1").click(function(){
 	  
 	  
 	  <div id="signUpForm" class="signUpForm" >
-        <form action="slognew.php" method="POST" enctype="multipart/form-data">
+        <form action="olognew.php" method="POST" enctype="multipart/form-data">
 		<p style="color:black">
 		CAR REG NO:<br><input type="text" name="carid" required><br />
-	E.g(xx-xx x-xxxx)<br />
+		E.g(xx-xx x-xxxx)<br />
 		CAR NAME:<br><input type="text" name="name" required><br />
+		
 		UPLOAD YOUR CAR PIC:<br />
 		<input type="file" name="image" required><br />
 		FUEL:<br><input type="text" name="fuel" required><br />
@@ -110,10 +115,10 @@ $("#clk1").click(function(){
 		</div>
 		
 		<div id="sign" class="sign"> 
-		<form action="slognew1.php" method="POST" enctype="multipart/form-data">
+		<form action="olognew1.php" method="POST" enctype="multipart/form-data">
 	
 	<p style="color:black">
-	
+		
 		CAR ID:<input type="text" name="carid" required><br />
        </p>	
 	   <input type="submit" value="REMOVE">
@@ -124,9 +129,8 @@ $("#clk1").click(function(){
 
 		</script>
 
-		<script type="text/javascript" src="supplier.js">
+		<script type="text/javascript" src="organization.js">
 
 		</script>
 		</body>
 		</html>
-		

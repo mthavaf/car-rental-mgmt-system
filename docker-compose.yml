@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: car-rental-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: car
+      MYSQL_USER: car_user
+      MYSQL_PASSWORD: car_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./schema/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  php:
+    image: php:8.1-apache
+    container_name: car-rental-app
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./:/var/www/html
+      - ./php.ini:/usr/local/etc/php/php.ini
+    ports:
+      - "8080:80"
+    environment:
+      - DB_HOST=mysql
+      - DB_USER=car_user
+      - DB_PASSWORD=car_password
+      - DB_NAME=car
+    command: >
+      bash -c "apt-get update && 
+      apt-get install -y mariadb-client &&
+      docker-php-ext-install mysqli &&
+      apache2ctl -D FOREGROUND"
+
+volumes:
+  mysql_data:

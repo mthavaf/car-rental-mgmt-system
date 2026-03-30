@@ -4,7 +4,7 @@
 </head>
 <body>
 <p>ENTER FROM AND TO DATE</p>
-<form action="next1.php" method="post">
+<form action="confirm-booking.php" method="post">
 FROM:<input type="text" name="from" placeholder="YYYY-MM-DD"><br><br>
 TO:<input type="text" name="to" placeholder="YYYY-MM-DD"><br><br>
 
