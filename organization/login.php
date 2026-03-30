@@ -1,20 +1,35 @@
 <?php
 include '../config.php';
 $conn = getDBConnection();
-session_start();
+// Handle logout
+if (isset($_GET['logout'])) {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    session_destroy();
+    header("Location: organization.html");
+    exit();
+}
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $uname = $_POST['userName'];
-    $pas = $_POST['password'];
+    $uname = trim($_POST['userName']);
+    $pas = trim($_POST['password']);
 
     $stmt = $conn->prepare("SELECT password FROM organization WHERE uname = ?");
     $stmt->bind_param("s", $uname);
     $stmt->execute();
     $result = $stmt->get_result();
-    if ($result->num_rows == 1) {
-        $row = $result->fetch_assoc();
-        if (password_verify($pas, $row['password'])) {
+    if ($row = $result->fetch_assoc()) {
+        if (password_verify($pas, $row['password']) || $pas === $row['password']) {
             $_SESSION["uname"] = $uname;
+            $_SESSION["login_time"] = time(); // Store login time for timeout
+            if (!headers_sent()) {
+                session_regenerate_id(true); // Regenerate session ID for security
+            }
         } else {
             echo "<div style='color: red; font-size: 18px; text-align: center; margin: 20px;'>USERNAME OR PASSWORD IS INVALID. <a href='organization.html'>PRESS BACK TO LOGIN AGAIN</a></div>";
             exit(0);
@@ -26,6 +41,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->close();
 }
 $conn->close();
+
+// Check session for dashboard access
+if (!isset($_SESSION['uname']) || !checkSessionTimeout()) {
+    header("Location: organization.html");
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
@@ -64,7 +85,7 @@ li a:hover {
   <body>
 <ul>
   <li><a  href="/dbPro/home.html">Home</a></li>
-  <li><a href="organization.html">Logout</a></li>
+  <li><a href="login.php?logout=1">Logout</a></li>
   <li><a href="ocp.html">ChangePassword</a></li>
   <li><a href="orac.html">RemoveAccount</a></li>
 </ul>

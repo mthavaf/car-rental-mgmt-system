@@ -1,21 +1,36 @@
 <?php
 include '../config.php';
 $conn = getDBConnection();
-session_start();
+// Handle logout
+if (isset($_GET['logout'])) {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    session_destroy();
+    header("Location: admin.html");
+    exit();
+}
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $uname = $_POST['userName'];
-    $pas = $_POST['password'];
+    $uname = trim($_POST['userName']);
+    $pas = trim($_POST['password']);
 
     $stmt = $conn->prepare("SELECT password FROM admin WHERE uname = ?");
     $stmt->bind_param("s", $uname);
     $stmt->execute();
     $result = $stmt->get_result();
-    if ($result->num_rows == 1) {
-        $row = $result->fetch_assoc();
+    if ($row = $result->fetch_assoc()) {
         // For admin, check if password is hashed or plain
         if (password_verify($pas, $row['password']) || $pas === $row['password']) {
             $_SESSION["uname"] = $uname;
+            $_SESSION["login_time"] = time(); // Store login time for timeout
+            if (!headers_sent()) {
+                session_regenerate_id(true); // Regenerate session ID for security
+            }
         } else {
             echo "<div style='color: red; font-size: 18px; text-align: center; margin: 20px;'>USERNAME OR PASSWORD IS INVALID. <a href='admin.html'>PRESS BACK TO LOGIN AGAIN</a></div>";
             exit(0);
@@ -27,6 +42,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->close();
 }
 $conn->close();
+
+// Check session for dashboard access
+if (!isset($_SESSION['uname']) || !checkSessionTimeout()) {
+    header("Location: admin.html");
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
@@ -83,7 +104,7 @@ $conn->close();
 <body>
 	<ul>
 		<li><a href="/dbPro/adminhome.html">Home</a></li>
-		<li><a href="admin.html">Logout</a></li>
+		<li><a href="login.php?logout=1">Logout</a></li>
 		<li><a href="acp.html">ChangePassword</a></li>
 		<li><a href="arac.html">RemoveAccount</a></li>
 		<li><a href="aac.html">ADDAccount</a></li>
@@ -149,11 +170,8 @@ $conn->close();
 	<div id="sign1" class="sign1">
 		<br>
 		<?php
-		$servername = "localhost";
-		$user = "root";
-		$passwd = "";
-		$db = "car";
-		$conn = mysqli_connect($servername, $user, $passwd, $db) or die(mysqli_connect_error());
+		include '../config.php';
+		$conn = getDBConnection();
 
 		$query = mysqli_query($conn, "SELECT uname FROM customer ");
 		echo "NUMBER OF CUSTOMER'S AVAILABLE. ";
@@ -163,7 +181,7 @@ $conn->close();
 		}
 
 
-		mysqli_close($conn);
+		$conn->close();
 		?>
 		<form action="arc.php" method="POST"><br>
 			<p>TO remove customer enter username</p>
@@ -179,11 +197,8 @@ $conn->close();
 	<div id="sign2" class="sign2">
 		<br><?php
 
-			$servername = "localhost";
-			$user = "root";
-			$passwd = "";
-			$db = "car";
-			$conn = mysqli_connect($servername, $user, $passwd, $db) or die(mysqli_connect_error());
+			include '../config.php';
+			$conn = getDBConnection();
 
 
 			$query = mysqli_query($conn, "SELECT uname FROM supplier ");
@@ -193,7 +208,7 @@ $conn->close();
 					echo nl2br("\n$u");
 			}
 
-			mysqli_close($conn);
+			$conn->close();
 			?>
 		<form action="ars.php" method="POST" enctype="multipart/form-data"><br>
 			<p>TO remove supplier enter username</p>
@@ -208,11 +223,8 @@ $conn->close();
 	<div id="sign3" class="sign3">
 		<br><?php
 
-			$servername = "localhost";
-			$user = "root";
-			$passwd = "";
-			$db = "car";
-			$conn = mysqli_connect($servername, $user, $passwd, $db) or die(mysqli_connect_error());
+			include '../config.php';
+			$conn = getDBConnection();
 
 			$query = mysqli_query($conn, "SELECT uname FROM organization ");
 			echo "NUMBER OF ORGANIZATION'S AVAILABLE. ";
@@ -221,7 +233,7 @@ $conn->close();
 					echo nl2br("\n$u");
 			}
 
-			mysqli_close($conn);
+			$conn->close();
 			?>
 		<form action="aro.php" method="POST" enctype="multipart/form-data"><br>
 			<p>TO remove organization enter username</p>
@@ -237,11 +249,8 @@ $conn->close();
 		<br>
 		<?php
 
-		$servername = "localhost";
-		$user = "root";
-		$passwd = "";
-		$db = "car";
-		$conn = mysqli_connect($servername, $user, $passwd, $db) or die(mysqli_connect_error());
+		include '../config.php';
+		$conn = getDBConnection();
 		$query = mysqli_query($conn, "SELECT * FROM transaction ");
 		echo "NUMBER OF TRANSACTION'S AVAILABLE. ";
 		while ($row = mysqli_fetch_row($query)) {
@@ -250,7 +259,7 @@ $conn->close();
 			echo "<br>";
 		}
 
-		mysqli_close($conn);
+		$conn->close();
 		?>
 		<form action="aut.html" method="POST" enctype="multipart/form-data"><br>
 			<p>TO update transaction enter username</p>
