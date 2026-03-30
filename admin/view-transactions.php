@@ -1,32 +1,38 @@
 <?php
-$servername="localhost";
-$user="root";
-$passwd="";
-$db="car";
-$conn=mysqli_connect($servername,$user,$passwd,$db) or die(mysqli_connect_error());
+include '../config.php';
+$conn = getDBConnection();
 session_start();
-$uname=$_SESSION["uname"];
-$count=mysqli_query($conn,"SELECT * FROM transaction WHERE uname='$uname'") ;
-$count=mysqli_num_rows($count);
-if($count==0 && $count > 1)
-{
-echo "ENTERED USER NAME IS INCORRECT";
-exit(0);
+$uname = $_SESSION["uname"];
+
+$stmt = $conn->prepare("SELECT COUNT(*) as count FROM transaction WHERE uname = ?");
+$stmt->bind_param("s", $uname);
+$stmt->execute();
+$result = $stmt->get_result();
+$row = $result->fetch_assoc();
+$count = $row['count'];
+$stmt->close();
+
+if ($count == 0) {
+    echo "NO TRANSACTIONS FOUND FOR THIS USER.";
+    exit(0);
 }
-if(!mysqli_query($conn,"UPDATE transaction SET booked='NO' WHERE uname='$uname'") )
-{
-echo "PROBLEM IN UPDATING TABLE.";
+
+$stmt = $conn->prepare("UPDATE transaction SET booked = 'NO' WHERE uname = ?");
+$stmt->bind_param("s", $uname);
+if (!$stmt->execute()) {
+    echo "PROBLEM IN UPDATING TABLE.";
+} else {
+    echo "UPDATED SUCCESSFULLY.";
 }
-else
-{
-echo "UPDATED SUCCESSFULLY.";
-}
+$stmt->close();
+$conn->close();
 ?>
 <html>
 <head>
-<title>update</title>
+<title>Update Transaction</title>
 </head>
 <body>
 </body>
+</html>
 </html>
 

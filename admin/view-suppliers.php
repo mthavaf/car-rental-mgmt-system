@@ -1,32 +1,42 @@
 <?php
-$servername="localhost";
-$user="root";
-$passwd="";
-$db="car";
-$conn=mysqli_connect($servername,$user,$passwd,$db) or die(mysqli_connect_error());
-if ($_SERVER["REQUEST_METHOD"] == "POST") 
-{
-$uname=$_POST['uname'];
-$count=mysqli_query($conn,"SELECT * FROM supplier where uname='$uname'");
-$count=mysqli_num_rows($count);
-if($count==0)
-{
-	echo "ENTERED USER NAME IS NOT PRESENT.";
-	exit(0);
+include '../config.php';
+$conn = getDBConnection();
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $uname = $_POST['uname'];
+
+    // Check if supplier exists
+    $stmt = $conn->prepare("SELECT uname FROM supplier WHERE uname = ?");
+    $stmt->bind_param("s", $uname);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows == 0) {
+        echo "ENTERED USER NAME IS NOT PRESENT.";
+        exit(0);
+    }
+    $stmt->close();
+
+    // Check if supplier has active rentals
+    $stmt = $conn->prepare("SELECT t.id FROM transaction t JOIN car_list c ON t.car_id = c.car_id WHERE c.uname = ? AND t.todate >= CURDATE()");
+    $stmt->bind_param("s", $uname);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows > 0) {
+        echo "CUSTOMER RENTED HIS CAR. REMOVE AFTER THEY RETURNED.";
+        exit(0);
+    }
+    $stmt->close();
+
+    // Delete supplier
+    $stmt = $conn->prepare("DELETE FROM supplier WHERE uname = ?");
+    $stmt->bind_param("s", $uname);
+    if (!$stmt->execute()) {
+        echo "PROBLEM IN REMOVING SUPPLIER DATA.";
+    } else {
+        echo "SUCCESSFULLY REMOVED. PRESS BACK TO MAINTAIN.";
+    }
+    $stmt->close();
 }
-$id=mysqli_query($conn,"SELECT car_id FROM supplier where uname='$uname'");
-$num=mysqli_query($conn,"SELECT * FROM transaction where car_id='$id'");
-if($num!=0)
-{
-	echo "CUSTOMER RENTED HIS CAR REMOVE AFTER HE RETURNED.";
-	exit(0);
-}
-if(!mysqli_query($conn,"DELETE FROM supplier where uname='$uname'"))
-{
-echo "PROBLEM IN REMOVING SUPPLIER DATA.";
-}
-else
-	echo "SUCCESSFULLY RMOVED PRESS BACK TO MAINTAIN.";
-}
+$conn->close();
+?>
 mysqli_close($conn);
 ?>

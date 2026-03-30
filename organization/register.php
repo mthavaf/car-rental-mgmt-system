@@ -3,11 +3,44 @@ include '../config.php';
 $conn = getDBConnection();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $oname = $_POST['name'];
-    $ph = $_POST['phNo'];
-    $mail = $_POST['mailId'];
-    $uname = $_POST['userName'];
-    $pas = password_hash($_POST['password'], PASSWORD_DEFAULT);
+    // Sanitize and validate inputs
+    $oname = trim($_POST['name']);
+    $ph = trim($_POST['phNo']);
+    $mail = trim($_POST['mailId']);
+    $uname = trim($_POST['userName']);
+    $pas = $_POST['password'];
+
+    // Validation
+    $errors = [];
+
+    if (empty($oname) || strlen($oname) > 100) {
+        $errors[] = "Organization name is required and must be less than 100 characters.";
+    }
+
+    if (empty($ph) || !preg_match('/^[0-9+\-\s()]{10,15}$/', $ph)) {
+        $errors[] = "Valid phone number is required (10-15 digits).";
+    }
+
+    if (empty($mail) || !filter_var($mail, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Valid email address is required.";
+    }
+
+    if (empty($uname) || strlen($uname) < 3 || strlen($uname) > 30 || !preg_match('/^[a-zA-Z0-9_]+$/', $uname)) {
+        $errors[] = "Username must be 3-30 characters, alphanumeric with underscores only.";
+    }
+
+    if (empty($pas) || strlen($pas) < 6) {
+        $errors[] = "Password must be at least 6 characters long.";
+    }
+
+    if (!empty($errors)) {
+        foreach ($errors as $error) {
+            echo htmlspecialchars($error) . "<br>";
+        }
+        exit(0);
+    }
+
+    $pas = password_hash($pas, PASSWORD_DEFAULT);
 
     // Check if username exists
     $stmt = $conn->prepare("SELECT uname FROM supplier WHERE uname = ? UNION SELECT uname FROM customer WHERE uname = ? UNION SELECT uname FROM organization WHERE uname = ?");
@@ -29,6 +62,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $image_size = getimagesize($file);
     if ($image_size === FALSE) {
         echo "That's not an image.";
+        exit(0);
+    }
+
+    // Additional file validation
+    $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
+    $max_size = 5 * 1024 * 1024; // 5MB
+
+    if (!in_array($image_size['mime'], $allowed_types)) {
+        echo "Only JPEG, PNG, and GIF images are allowed.";
+        exit(0);
+    }
+
+    if ($_FILES['adhar']['size'] > $max_size) {
+        echo "Image size must be less than 5MB.";
         exit(0);
     }
 

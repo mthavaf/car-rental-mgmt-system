@@ -1,33 +1,33 @@
 <?php
-$servername="localhost";
-$user="root";
-$passwd="";
-$db="car";
-$conn=mysqli_connect($servername,$user,$passwd,$db) or die(mysqli_connect_error());
+include '../config.php';
+$conn = getDBConnection();
 session_start();
-$uname=$_SESSION['uname'];
+$uname = $_SESSION['uname'];
 
-$query=mysqli_query($conn,"SELECT * FROM admin");
-$num=mysqli_num_rows($query);
-if($num>1)
-{
-if(!mysqli_query($conn,"DELETE FROM admin WHERE uname='$uname'"))
-{
-	echo "PROBLEM IN REMOVING YOUR ACCOUNT.";
-	
-}	
-else
-{
-	echo "SUCCESSSFULLY REMOVED YOUR ACCOUNT.";
+// Check if there are other admins
+$stmt = $conn->prepare("SELECT COUNT(*) as count FROM admin");
+$stmt->execute();
+$result = $stmt->get_result();
+$row = $result->fetch_assoc();
+$count = $row['count'];
+$stmt->close();
+
+if ($count > 1) {
+    $stmt = $conn->prepare("DELETE FROM admin WHERE uname = ?");
+    $stmt->bind_param("s", $uname);
+    if (!$stmt->execute()) {
+        echo "PROBLEM IN REMOVING YOUR ACCOUNT.";
+    } else {
+        echo "SUCCESSFULLY REMOVED YOUR ACCOUNT.";
+        session_unset();
+        session_destroy();
+    }
+    $stmt->close();
+} else {
+    echo "YOU ARE THE ONLY ADMIN PRESENT. INTRODUCE NEW ADMIN THEN REMOVE YOUR ACCOUNT.";
 }
-}
-else
-{
-	echo "YOU ARE THE ONLY ADMIN PRESENT INTRODUCE NEW ADMIN THEN REMOVE YOUR ACCOUNT.";
-	exit(0);
-}
-session_unset();
-session_destroy();
+$conn->close();
+?>
 	mysqli_close($conn);
 ?>
 	<html>

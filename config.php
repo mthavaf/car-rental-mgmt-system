@@ -52,4 +52,27 @@ function executeQuery($query, $params = []) {
     return $stmt;
 }
 
+// Session security functions
+function checkSessionTimeout($timeout_minutes = 30) {
+    if (!isset($_SESSION['login_time'])) {
+        return false; // Not logged in
+    }
+    
+    $timeout_seconds = $timeout_minutes * 60;
+    if (time() - $_SESSION['login_time'] > $timeout_seconds) {
+        session_destroy();
+        return false; // Session expired
+    }
+    
+    return true; // Session valid
+}
+
+function requireLogin($redirect_url = 'index.html') {
+    session_start();
+    if (!isset($_SESSION['uname']) || !checkSessionTimeout()) {
+        header("Location: $redirect_url");
+        exit();
+    }
+}
+
 ?>

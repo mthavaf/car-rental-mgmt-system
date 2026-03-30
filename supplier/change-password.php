@@ -4,9 +4,35 @@ $conn = getDBConnection();
 session_start();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Sanitize inputs
     $opas = $_POST['opas'];
+    $npas = $_POST['npas'];
+    $rpas = $_POST['rpas'];
     $uname = $_SESSION["uname"];
-    $new = password_hash($_POST['npas'], PASSWORD_DEFAULT);
+
+    // Validation
+    $errors = [];
+
+    if (empty($opas)) {
+        $errors[] = "Old password is required.";
+    }
+
+    if (empty($npas) || strlen($npas) < 6) {
+        $errors[] = "New password must be at least 6 characters long.";
+    }
+
+    if ($npas !== $rpas) {
+        $errors[] = "New passwords do not match.";
+    }
+
+    if (!empty($errors)) {
+        foreach ($errors as $error) {
+            echo htmlspecialchars($error) . "<br>";
+        }
+        exit(0);
+    }
+
+    $new = password_hash($npas, PASSWORD_DEFAULT);
 
     $stmt = $conn->prepare("SELECT password FROM supplier WHERE uname = ?");
     $stmt->bind_param("s", $uname);
